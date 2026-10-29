@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gorilla Simulator X</title>
+<meta name="description" content="Gorilla Simulator X is a multiplayer pet-collecting VR game for Meta Quest by Big Interations.">
+<meta property="og:title" content="Gorilla Simulator X">
+<meta property="og:description" content="Swing, climb and smash across floating islands and hatch a squad of cube pets. Multiplayer VR for Meta Quest.">
+<meta property="og:image" content="assets/cover.jpg">
+<link rel="icon" href="assets/icon.jpg">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)} body{margin:0} img{max-width:100%%} [hidden]{display:none!important}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Nunito:wght@400;600;800&display=swap">
+<style>
+/* Layout: a sky that fades into the island ground, chunky "cube" cards like the pets, one gold coin accent. */
+:root {
+  --sky: #cfe9ff;
+  --sky2: #eaf6ff;
+  --ground: #f7fbff;
+  --ink: #17233a;
+  --ink-soft: #46546e;
+  --line: #c7d9ee;
+  --coin: #ffc93c;
+  --coin-ink: #3d2a00;
+  --grass: #3f9b4f;
+  --pumpkin: #ff7f11;
+  --night: #241a38;
+  --night-ink: #f5ecff;
+  --card: #ffffff;
+  --shadow: 0 6px 0 #9fbbd8;
+  --display: "Luckiest Guy", "Arial Black", Impact, system-ui, sans-serif;
+  --body: "Nunito", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --sky: #13223d; --sky2: #0d182c; --ground: #0b1424; --ink: #e8f1ff; --ink-soft: #a9b9d3; --line: #24385a;
+  --coin: #ffc93c; --coin-ink: #2b1d00; --grass: #6cd17c; --pumpkin: #ff9a3d; --night: #2b1f45; --night-ink: #f5ecff;
+  --card: #13213a; --shadow: 0 6px 0 #050a14; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --sky: #13223d; --sky2: #0d182c; --ground: #0b1424; --ink: #e8f1ff; --ink-soft: #a9b9d3; --line: #24385a;
+  --coin: #ffc93c; --coin-ink: #2b1d00; --grass: #6cd17c; --pumpkin: #ff9a3d; --night: #2b1f45; --night-ink: #f5ecff;
+  --card: #13213a; --shadow: 0 6px 0 #050a14; color-scheme: dark }
+
+* { box-sizing: border-box }
+body { background: var(--ground); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.6; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+a { color: inherit }
+h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .02em; line-height: 1.05; text-wrap: balance; margin: 0 }
+h2 { font-size: clamp(30px, 5vw, 46px) }
+h3 { font-size: 24px }
+:focus-visible { outline: 3px solid var(--coin); outline-offset: 3px; border-radius: 6px }
+
+/* nav */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--sky) }
+.nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: color-mix(in srgb, var(--sky) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 2px solid var(--line) }
+.nav .wrap { display: flex; align-items: center; gap: 16px; padding-block: 10px; flex-wrap: wrap }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-right: auto }
+.brand img { width: 36px; height: 36px; border-radius: 9px; border: 2px solid var(--ink) }
+.brand span { font-family: var(--display); font-size: 22px; letter-spacing: .03em }
+.nav nav { display: flex; gap: 6px; flex-wrap: wrap }
+.nav nav a { text-decoration: none; font-weight: 800; font-size: 15px; padding: 6px 12px; border-radius: 999px }
+.nav nav a[aria-current="page"] { background: var(--ink); color: var(--ground) }
+.nav nav a:hover { background: color-mix(in srgb, var(--ink) 10%, transparent) }
+
+/* hero */
+.hero { background: linear-gradient(var(--sky), var(--sky2)); padding-block: 40px 56px; border-bottom: 2px solid var(--line) }
+.hero .wrap { display: grid; grid-template-columns: 1fr; gap: 28px; justify-items: center; text-align: center }
+.hero .logo { width: min(640px, 100%); height: auto; filter: drop-shadow(0 6px 0 rgba(0,0,0,.15)) }
+.tag { font-size: clamp(18px, 2.4vw, 22px); color: var(--ink-soft); max-width: 40ch; margin: 0 }
+.cta { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center }
+.btn { font-family: var(--display); font-size: 20px; letter-spacing: .04em; padding: 12px 22px; border-radius: 14px; border: 3px solid var(--ink); text-decoration: none; background: var(--coin); color: var(--coin-ink); box-shadow: 0 5px 0 var(--ink); display: inline-block }
+.btn.alt { background: var(--card); color: var(--ink) }
+.btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--ink) }
+.platform { font-size: 14px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft) }
+.trailer { width: 100%; max-width: 960px; aspect-ratio: 16/9; border-radius: 18px; border: 4px solid var(--ink); box-shadow: var(--shadow); background: #000; display: block }
+
+section.block { padding-block: 56px }
+.lead { color: var(--ink-soft); max-width: 62ch; margin: 10px 0 0 }
+
+/* features: cube cards */
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; margin-top: 28px }
+.cube { background: var(--card); border: 3px solid var(--ink); border-radius: 16px; padding: 18px 18px 16px; box-shadow: var(--shadow); display: grid; gap: 6px; align-content: start }
+.cube .num { font-family: var(--display); font-size: 28px; color: var(--grass); line-height: 1 }
+.cube p { margin: 0; color: var(--ink-soft); font-size: 16px }
+
+/* event banner */
+.event { background: var(--night); color: var(--night-ink); border-block: 4px solid var(--pumpkin) }
+.event .wrap { display: grid; grid-template-columns: 1.1fr 1fr; gap: 28px; align-items: center; padding-block: 44px }
+.event h2 { color: var(--pumpkin) }
+.event p { margin: 10px 0 0; opacity: .9 }
+.event .facts { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px }
+.chip { font-weight: 800; font-size: 14px; padding: 5px 12px; border-radius: 999px; border: 2px solid var(--pumpkin); color: var(--night-ink) }
+.event img { width: 100%; border-radius: 14px; border: 3px solid var(--pumpkin) }
+
+/* gallery */
+.gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-top: 26px }
+.gallery img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 12px; border: 3px solid var(--ink); display: block }
+
+/* legal pages */
+.legal { padding-block: 40px 64px }
+.legal .doc { max-width: 72ch }
+.legal h1 { font-size: clamp(34px, 6vw, 52px) }
+.legal .meta { color: var(--ink-soft); font-weight: 600; margin: 8px 0 26px }
+.legal h2 { font-family: var(--body); font-weight: 800; font-size: 21px; letter-spacing: 0; margin: 30px 0 6px }
+.legal p, .legal li { color: var(--ink) }
+.legal ul { padding-left: 22px }
+.legal li { margin: 4px 0 }
+.fill { background: color-mix(in srgb, var(--coin) 45%, transparent); padding: 0 4px; border-radius: 4px; font-weight: 800 }
+.legal table { border-collapse: collapse; width: 100%; font-size: 15px }
+.tbl { overflow-x: auto; margin: 10px 0 }
+.legal th, .legal td { text-align: left; border-bottom: 1px solid var(--line); padding: 8px 10px 8px 0; vertical-align: top }
+.legal th { font-weight: 800 }
+
+footer { border-top: 2px solid var(--line); background: var(--sky2); padding-block: 26px; font-size: 15px; color: var(--ink-soft) }
+footer .wrap { display: flex; gap: 14px 26px; flex-wrap: wrap; align-items: center }
+footer .links { display: flex; gap: 16px; flex-wrap: wrap }
+footer .copyright { margin-left: auto }
+
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap }
+.pagehead { background: linear-gradient(var(--sky), var(--sky2)); border-bottom: 2px solid var(--line); padding-block: 36px 30px }
+.pagehead h1 { font-size: clamp(36px, 6vw, 56px) }
+.cube.link { text-decoration: none; transition: transform .12s ease }
+.cube.link:hover { transform: translateY(-3px) }
+.email { font-weight: 800; user-select: all; overflow-wrap: anywhere }
+button.copy { font: 800 13px var(--body); padding: 3px 10px; border-radius: 999px; border: 2px solid var(--ink); background: var(--card); color: var(--ink); cursor: pointer; margin-left: 4px }
+@media (max-width: 760px) { .event .wrap { grid-template-columns: 1fr } footer .copyright { margin-left: 0 } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important } }
+</style>
+</head>
+<body>
+
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#home"><img src="assets/icon.jpg" alt=""><span>Gorilla Simulator X</span></a>
+    <nav aria-label="Main">
+      <a href="#home" data-view="home">Home</a>
+      <a href="#game" data-view="game">Game</a>
+      <a href="#terms" data-view="terms">Terms</a>
+      <a href="#privacy" data-view="privacy">Privacy</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<!-- ============================================================ HOME -->
+<div id="view-home" data-page="home">
+  <section class="hero">
+    <div class="wrap">
+      <h1 class="sr">Gorilla Simulator X</h1>
+      <picture>
+        <source media="(max-width: 600px)" srcset="assets/logo_stack.png">
+        <img class="logo" src="assets/logo.png" alt="Gorilla Simulator X">
+      </picture>
+      <p class="tag">Gorilla Simulator X is a multiplayer pet-collecting game for Meta Quest. Swing, climb and smash across floating islands with nothing but your arms, and hatch a squad of cube pets that fights by your side.</p>
+      <div class="cta">
+        <a class="btn" href="#game">Explore the game</a>
+        <a class="btn alt" href="#halloween">Halloween event</a>
+      </div>
+      <div class="platform">Multiplayer VR · Meta Quest</div>
+      <video class="trailer" src="assets/trailer.mp4" poster="assets/poster.jpg" controls playsinline preload="metadata" aria-label="Gorilla Simulator X trailer"></video>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="wrap">
+      <h2>Welcome to Gorilla Simulator X</h2>
+      <p class="lead">Break blocks for coins, hatch eggs, unlock new islands and collect rare Golden, Rainbow and Huge pets with players from around the world.</p>
+      <div class="grid quick">
+        <a class="cube link" href="#game"><span class="num">Play</span><h3>The game</h3><p>How it plays, the zones, pets and features.</p></a>
+        <a class="cube link" href="#halloween"><span class="num" style="color:var(--pumpkin)">Event</span><h3>Halloween</h3><p>A haunted island, Candy and 50 new pets. Ends Nov 8.</p></a>
+        <a class="cube link" href="#screens"><span class="num">Look</span><h3>Screenshots</h3><p>See the islands and the pets up close.</p></a>
+        <div class="cube"><span class="num">Help</span><h3>Support</h3><p>Questions, bugs or reports:</p><p><span class="email">BigInteractions@protonmail.com</span> <button class="copy" type="button" data-copy="BigInteractions@protonmail.com">Copy</button></p></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ============================================================ GAME -->
+<div id="view-game" data-page="game" hidden>
+  <section class="pagehead">
+    <div class="wrap">
+      <h1>The Game</h1>
+      <p class="lead">Everything you can do in Gorilla Simulator X.</p>
+    </div>
+  </section>
+
+  <section class="block" id="features">
+    <div class="wrap">
+      <h2>How it plays</h2>
+      <p class="lead">You move like a gorilla: push off the ground to run, grab walls to climb, and punch blocks to break them. Every block you break pays coins, and your pets help.</p>
+      <div class="grid">
+        <div class="cube"><span class="num">100+</span><h3>Pets to collect</h3><p>Cube pets from Common to Mythic, plus giant Huge pets. Any hatch can come out Golden.</p></div>
+        <div class="cube"><span class="num">9</span><h3>Zones to unlock</h3><p>Meadow, Forest, Beach, Desert, Snow, Volcano, Candy, Crystal and Cosmic. Each one pays more coins than the last.</p></div>
+        <div class="cube"><span class="num">x3</span><h3>Fuse and upgrade</h3><p>Fuse three of a pet into a stronger one, then turn your best pets Golden and Rainbow.</p></div>
+        <div class="cube"><span class="num">Rebirth</span><h3>Start over stronger</h3><p>Rebirth for permanent boosts, buy upgrades and climb the ranks.</p></div>
+        <div class="cube"><span class="num">Trade</span><h3>Play together</h3><p>Join a public room or make a private room code for your friends, and trade pets with other players.</p></div>
+        <div class="cube"><span class="num">Live</span><h3>Events</h3><p>Double coins, lucky hours, pet parties, boss fights and limited-time worlds.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="event" id="halloween">
+    <div class="wrap">
+      <div>
+        <h2>Halloween Event</h2>
+        <p>Step through the portal in the hub to reach a haunted island. Break pumpkins, candy buckets and gravestones to collect Candy, then spend it on the Spooky Egg and the Haunted Egg.</p>
+        <p>The Haunted Egg holds 10 exclusive pets, including the Huge Pumpkin King, Huge Grim Reaper and Huge Spectral Ghost. They can only be hatched while the event is live.</p>
+        <div class="facts"><span class="chip">50 new pets</span><span class="chip">New currency: Candy</span><span class="chip">Ends Nov 8, 11:59 PM ET</span></div>
+      </div>
+      <img src="assets/poster.jpg" alt="Pets on the Halloween island at night" loading="lazy">
+    </div>
+  </section>
+
+  <section class="block" id="screens">
+    <div class="wrap">
+      <h2>Screenshots</h2>
+      <div class="gallery">
+        <img src="assets/shot1.jpg" alt="Huge pets on the Cosmic island" loading="lazy">
+        <img src="assets/shot2.jpg" alt="A Huge Dragon in the Forest zone" loading="lazy">
+        <img src="assets/shot3.jpg" alt="Pets on the Volcano island" loading="lazy">
+        <img src="assets/shot4.jpg" alt="The Snow zone" loading="lazy">
+        <img src="assets/shot5.jpg" alt="The whole world of floating islands from above" loading="lazy">
+        <img src="assets/cover.jpg" alt="A group of Huge pets" loading="lazy">
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ============================================================ TERMS -->
+<div id="view-terms" data-page="terms" hidden>
+  <section class="legal">
+    <div class="wrap"><article class="doc">
+      <h1>Terms of Service</h1>
+      <p class="meta">Effective October 28, 2026</p>
+
+      <p>These Terms of Service ("Terms") cover your use of Gorilla Simulator X (the "Game"), made by Big Interations ("we", "us"). By downloading or playing the Game you agree to these Terms. If you don't agree, don't play the Game.</p>
+
+      <h2>1. Who can play</h2>
+      <p>You must meet the age requirements for a Meta account and for Meta Quest in your country. If you are under the age of majority where you live, a parent or guardian must agree to these Terms for you.</p>
+
+      <h2>2. Your account</h2>
+      <p>The Game signs you in with your Meta account and saves your progress on our game servers. You are responsible for activity on your account. Don't share, sell or transfer your account or your progress.</p>
+
+      <h2>3. Your license to play</h2>
+      <p>We give you a personal, non-exclusive, non-transferable, revocable license to play the Game for your own non-commercial use. You may not copy, modify, reverse engineer, resell or redistribute the Game, except where the law allows it.</p>
+
+      <h2>4. Virtual items and currencies</h2>
+      <ul>
+        <li>Coins, Gems, Candy, pets, eggs, boosts and other in-game items ("Virtual Items") have no real-world value. They cannot be exchanged for money or anything of value outside the Game.</li>
+        <li>You get a limited license to use Virtual Items inside the Game. You do not own them.</li>
+        <li>Event items and exclusive pets may only be available for a limited time.</li>
+        <li>We may change, rebalance or remove Virtual Items, for example to fix bugs or keep the game fair. If a bug or cheat gives you items, we may remove them.</li>
+      </ul>
+
+      <h2>5. Purchases</h2>
+      <p>Purchases in the Game are processed by Meta through the Meta Horizon Store, under Meta's terms and refund policy. We do not see or store your payment details. Except where the law requires otherwise, purchases are final.</p>
+
+      <h2>6. Playing with others</h2>
+      <p>The Game is online and multiplayer. You agree not to:</p>
+      <ul>
+        <li>harass, threaten, bully or discriminate against other players, in voice chat, names or any other way;</li>
+        <li>use offensive or inappropriate names;</li>
+        <li>cheat, hack, use mods or exploits, or interfere with the servers or other players' games;</li>
+        <li>scam other players in trades or buy, sell or trade accounts or items for real money;</li>
+        <li>pretend to be a staff member or another player.</li>
+      </ul>
+      <p>We can't monitor every room. You can report a player to us at the contact below, and you can use Meta's block and report tools.</p>
+
+      <h2>7. Enforcement</h2>
+      <p>If you break these Terms, we may warn you, remove you from a room, reset or remove Virtual Items, or suspend or ban your account, with or without notice. You won't get a refund for Virtual Items lost because of a ban, except where the law requires it.</p>
+
+      <h2>8. Changes to the Game</h2>
+      <p>The Game is updated over time. We may add, change or remove features, events and content, and we may stop running the Game. We'll try to give notice in the Game before we shut it down.</p>
+
+      <h2>9. Disclaimer</h2>
+      <p>The Game is provided "as is" and "as available". To the extent the law allows, we make no warranties of any kind, including that the Game will be error-free or always available. Play in a safe, clear space and follow Meta's health and safety warnings for VR.</p>
+
+      <h2>10. Limitation of liability</h2>
+      <p>To the extent the law allows, we are not liable for indirect, incidental or consequential damages, or for lost data or Virtual Items. Our total liability for any claim is limited to the amount you paid us in the 12 months before the claim, or $10 if you paid nothing. Some places don't allow these limits, so they may not apply to you.</p>
+
+      <h2>11. Changes to these Terms</h2>
+      <p>We may update these Terms. When we do, we'll change the date at the top of this page. If you keep playing after an update, you accept the new Terms.</p>
+
+      <h2>12. Governing law</h2>
+      <p>These Terms are governed by the laws of the State of New York, United States, without regard to conflict-of-law rules. Any dispute will be handled in the state or federal courts located in New York, except where your local consumer law gives you other rights.</p>
+
+      <h2>13. Meta</h2>
+      <p>Gorilla Simulator X is made by an independent developer. Meta is not a party to these Terms and is not responsible for the Game.</p>
+
+      <h2>14. Contact</h2>
+      <p>Questions or reports: <span class="email">BigInteractions@protonmail.com</span> <button class="copy" type="button" data-copy="BigInteractions@protonmail.com">Copy</button></p>
+    </article></div>
+  </section>
+</div>
+
+<!-- ============================================================ PRIVACY -->
+<div id="view-privacy" data-page="privacy" hidden>
+  <section class="legal">
+    <div class="wrap"><article class="doc">
+      <h1>Privacy Policy</h1>
+      <p class="meta">Effective October 28, 2026</p>
+
+      <p>This policy explains what information Gorilla Simulator X (the "Game") collects, how it is used and what choices you have. The Game is made by Big Interations ("we", "us").</p>
+
+      <h2>1. What we collect</h2>
+      <div class="tbl"><table>
+        <thead><tr><th>Information</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>Your Meta user ID and display name, provided by Meta when you sign in</td><td>To create your game account and show your name to other players</td></tr>
+          <tr><td>A game account ID created by our game server provider</td><td>To save and load your progress</td></tr>
+          <tr><td>Game progress: coins, gems, candy, pets, eggs, upgrades, rebirths, zones, stats and play time</td><td>To save your game and keep it fair (we check saves for cheating)</td></tr>
+          <tr><td>Purchase records (which item you bought and when)</td><td>To give you what you bought. Meta handles payment; we never see your card or payment details</td></tr>
+          <tr><td>Your IP address and connection data, used by our multiplayer and server providers</td><td>To connect you to rooms and servers and keep them running</td></tr>
+          <tr><td>Your voice, if you talk in voice chat</td><td>Voice is sent live to other players in your room. We do record it so we can make sure no TOS rules are broken we dont store it.</td></tr>
+          <tr><td>Reports and messages you send us</td><td>To answer you and enforce the Terms</td></tr>
+          <tr><td>Settings saved on your headset (graphics, volume, menu options)</td><td>To remember your settings. These stay on your device</td></tr>
+        </tbody>
+      </table></div>
+      <p>We do not collect your real name, email address, location, contacts or photos, and we do not use advertising trackers.</p>
+
+      <h2>2. In-app purchases</h2>
+      <p>Gorilla Simulator X sells optional in-game items for real money through Meta's in-app purchase (IAP) system. Players can buy:</p>
+      <ul>
+        <li><strong>Consumable items</strong>: gem packs, eggs, boost bundles, a one-time starter pack and store-exclusive pets.</li>
+        <li><strong>Durable passes</strong>: permanent perks such as 2x Coins, Lucky Pass, extra pet slots, Auto Hatch, Pet Magnet and VIP.</li>
+      </ul>
+      <p>The Game uses Meta's IAP feature only to do the following:</p>
+      <ul>
+        <li>load the list of items and their prices in your local currency;</li>
+        <li>open Meta's checkout window when you choose to buy something;</li>
+        <li>read your purchase so we can give you the item, and mark consumable items as used so they can be bought again;</li>
+        <li>check which passes you own each time the Game starts, so they work after a reinstall or on another headset, and finish any purchase that was interrupted.</li>
+      </ul>
+      <p>The purchase information we receive is the item ID (SKU), a purchase ID and the time of purchase. We store the purchase ID with your saved game so the same purchase is never given twice. Our server may send the purchase ID to Meta to confirm it is real before giving the item. Meta handles all payment; we never receive your name, card, billing address or other payment details. Purchases are covered by Meta's terms and refund policy.</p>
+
+      <h2>3. Services we use</h2>
+      <p>These companies process data for us so the Game can work. Each has its own privacy policy.</p>
+      <ul>
+        <li><strong>Meta Platforms</strong>: sign-in, the Meta Horizon Store and in-app purchases (prices, checkout, purchase checks and owned passes).</li>
+        <li><strong>Microsoft PlayFab</strong>: game accounts and saved progress.</li>
+        <li><strong>Photon by Exit Games</strong>: multiplayer rooms and voice chat.</li>
+      </ul>
+
+      <h2>4. What we don't do</h2>
+      <ul>
+        <li>We don't sell your personal information.</li>
+        <li>We don't share it for advertising.</li>
+        <li>We don't show ads in the Game.</li>
+      </ul>
+
+      <h2>5. What other players can see</h2>
+      <p>Other players in your room can see your display name and your avatar, see your equipped pets, hear your voice if you use voice chat, and see announcements such as rare hatches. Use a private room code if you only want to play with friends.</p>
+
+      <h2>6. How long we keep it</h2>
+      <p>We keep your game data while your account is active. If you ask us to delete your data, or your account is inactive for 24 months, we delete or anonymize it, except for what we must keep to follow the law or stop cheating and abuse.</p>
+
+      <h2>7. Your choices and rights</h2>
+      <ul>
+        <li>You can ask us for a copy of your data, to correct it or to delete it. Email us with your in-game name so we can find your account.</li>
+        <li>You can mute your microphone or other players with your headset's Meta settings, and you don't have to use voice chat to play.</li>
+        <li>Depending on where you live (for example the EU, UK or California), you may have more rights, such as the right to object or to complain to a data protection authority. We will not treat you differently for using them.</li>
+      </ul>
+
+      <h2>8. Children</h2>
+      <p>The Game is not directed at children under 13, and we do not knowingly collect personal information from them. If you are a parent and believe your child under 13 has played the Game, contact us and we will delete their data.</p>
+
+      <h2>9. Security</h2>
+      <p>Data is sent over encrypted connections and stored by our server providers. Admin tools in the Game are checked on the server. No system is perfectly secure, so we can't promise that data will never be accessed without permission.</p>
+
+      <h2>10. International transfers</h2>
+      <p>Our providers may process data in the United States and other countries. Where required, they use legal safeguards such as standard contractual clauses.</p>
+
+      <h2>11. Changes</h2>
+      <p>If we change this policy, we'll update the date at the top. Big changes will also be announced in the Game.</p>
+
+      <h2>12. Contact</h2>
+      <p>For privacy questions or data requests: <span class="email">BigInteractions@protonmail.com</span> <button class="copy" type="button" data-copy="BigInteractions@protonmail.com">Copy</button></p>
+    </article></div>
+  </section>
+</div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="links"><a href="#home">Home</a><a href="#game">Game</a><a href="#terms">Terms of Service</a><a href="#privacy">Privacy Policy</a></div>
+    <div>Support: <span class="email">BigInteractions@protonmail.com</span></div><div class="copyright">© 2026 Big Interations. Gorilla Simulator X. Meta and Meta Quest are trademarks of Meta Platforms, Inc.</div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var pages = ["home", "game", "terms", "privacy"];
+  var homeAnchors = ["features", "halloween", "screens"];
+  function show() {
+    var h = (location.hash || "#home").slice(1);
+    var page = pages.indexOf(h) >= 0 ? h : (homeAnchors.indexOf(h) >= 0 ? "game" : "home");
+    pages.forEach(function (p) { document.getElementById("view-" + p).hidden = p !== page; });
+    document.querySelectorAll(".nav nav a").forEach(function (a) {
+      if (a.dataset.view === page) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+    });
+    if (homeAnchors.indexOf(h) >= 0) { var el = document.getElementById(h); if (el) el.scrollIntoView(); }
+    else window.scrollTo(0, 0);
+  }
+  window.addEventListener("hashchange", show);
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("button.copy"); if (!b) return;
+    var txt = b.dataset.copy;
+    function done(ok) { b.textContent = ok ? "Copied" : "Select it"; setTimeout(function () { b.textContent = "Copy"; }, 1600); }
+    try { navigator.clipboard.writeText(txt).then(function () { done(true); }, function () { done(false); }); } catch (err) { done(false); }
+  });
+  show();
+})();
+</script>
+
+</body>
+</html>
